@@ -205,7 +205,10 @@ fun Test456() {
 
 
 @Composable
-fun MedicalStoreSignupButton(onClick: () -> Unit) {
+fun MedicalStoreButton(
+    text: String,
+    onClick: () -> Unit
+) {
     val buttonWidth = 200.dp
     val buttonHeight = 50.dp
     val buttonWidth2 = 400.dp
@@ -254,7 +257,7 @@ fun MedicalStoreSignupButton(onClick: () -> Unit) {
             )
         ) {
             Text(
-                text = "Signup",
+                text = text,
                 fontSize = 18.sp,
                 color = rippleColor,
                 fontWeight = FontWeight.Bold,

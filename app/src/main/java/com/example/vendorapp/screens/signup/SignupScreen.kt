@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +40,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,7 +48,7 @@ import androidx.navigation.NavHostController
 import com.example.vendorapp.R
 import com.example.vendorapp.navigation.AppRoutes
 import com.example.vendorapp.viewmodel.CreateUserResult
-import com.example.vendorapp.viewmodel.UserViewModel
+import com.example.vendorapp.viewmodel.SignupViewModel
 
 
 @Composable
@@ -62,8 +62,8 @@ fun SignupScreen(navHostController: NavHostController) {
     else
         painterResource(id = R.drawable.eye)
 
-    val userViewModel: UserViewModel = hiltViewModel()
-    val createUserResult by userViewModel.createUserResult.collectAsState()
+    val signupViewModel: SignupViewModel = hiltViewModel()
+    val createUserResult by signupViewModel.createUserResult.collectAsState()
 
 
 
@@ -100,21 +100,10 @@ fun SignupScreen(navHostController: NavHostController) {
             fontFamily = FontFamily(Font(R.font.sfpro)),
         )
 
-//        Text(
-//            text = "Sign Up",
-//            fontSize = 30.sp,
-//            color = Color.Black,
-//            textAlign = TextAlign.Center,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(bottom = 30.dp)
-//        )
-
-
         // Username input field
         OutlinedTextField(
-            value = userViewModel.userName,
-            onValueChange = { userViewModel.userName = it },
+            value = signupViewModel.userName,
+            onValueChange = { signupViewModel.userName = it },
             leadingIcon = { Icon(Icons.Default.Person, contentDescription = "person") },
             label = { Text(text = "Username") },
             textStyle = TextStyle(
@@ -127,8 +116,8 @@ fun SignupScreen(navHostController: NavHostController) {
 
         // Email input field
         OutlinedTextField(
-            value = userViewModel.userEmail,
-            onValueChange = { userViewModel.userEmail = it },
+            value = signupViewModel.userEmail,
+            onValueChange = { signupViewModel.userEmail = it },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "email") },
             label = { Text(text = "Email") },
             modifier = Modifier
@@ -139,9 +128,9 @@ fun SignupScreen(navHostController: NavHostController) {
 
         // Password input field
         OutlinedTextField(
-            value = userViewModel.password,
+            value = signupViewModel.password,
             onValueChange = {
-                userViewModel.password = it
+                signupViewModel.password = it
             },
             label = { Text(text = "Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "person") },
@@ -171,8 +160,8 @@ fun SignupScreen(navHostController: NavHostController) {
 
         // Phone input field
         OutlinedTextField(
-            value = userViewModel.userPhone,
-            onValueChange = { userViewModel.userPhone = it },
+            value = signupViewModel.userPhone,
+            onValueChange = { signupViewModel.userPhone = it },
             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = "phone") },
             label = { Text(text = "Phone") },
             modifier = Modifier
@@ -183,8 +172,8 @@ fun SignupScreen(navHostController: NavHostController) {
 
         // Address input field
         OutlinedTextField(
-            value = userViewModel.userAddress,
-            onValueChange = { userViewModel.userAddress = it },
+            value = signupViewModel.userAddress,
+            onValueChange = { signupViewModel.userAddress = it },
             leadingIcon = { Icon(Icons.Default.Home, contentDescription = "address") },
             label = { Text(text = "Address") },
             modifier = Modifier
@@ -194,8 +183,8 @@ fun SignupScreen(navHostController: NavHostController) {
 
         // Pincode input field
         OutlinedTextField(
-            value = userViewModel.userPincode,
-            onValueChange = { userViewModel.userPincode = it },
+            value = signupViewModel.userPincode,
+            onValueChange = { signupViewModel.userPincode = it },
             leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = "pincode") },
             label = { Text(text = "Pincode") },
             modifier = Modifier
@@ -204,26 +193,19 @@ fun SignupScreen(navHostController: NavHostController) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        MedicalStoreSignupButton(
+        MedicalStoreButton(
+            text = "Signup",
             onClick = {
-                userViewModel.createUser(
-                    password = userViewModel.password,
-                    userName = userViewModel.userName,
-                    userAddress = userViewModel.userAddress,
-                    userEmail = userViewModel.userEmail,
-                    userPhone = userViewModel.userPhone,
-                    userPincode = userViewModel.userPincode
+                signupViewModel.createUser(
+                    password = signupViewModel.password,
+                    userName = signupViewModel.userName,
+                    userAddress = signupViewModel.userAddress,
+                    userEmail = signupViewModel.userEmail,
+                    userPhone = signupViewModel.userPhone,
+                    userPincode = signupViewModel.userPincode
                 )
             },
         )
-
-//        Text(
-//            text = "Already have an account? Sign in",
-//            color = Color.Gray,
-//            modifier = Modifier
-//                .padding(top = 20.dp)
-//                .clickable {  }
-//        )
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -239,7 +221,9 @@ fun SignupScreen(navHostController: NavHostController) {
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .clickable { /* Handle Sign in click */ }
+                    .clickable {
+                        navHostController.navigate(AppRoutes.SignInScreen)
+                    }
             )
         }
 
@@ -248,17 +232,26 @@ fun SignupScreen(navHostController: NavHostController) {
 
     createUserResult?.let { result ->
         when (result) {
+            is CreateUserResult.Loading -> {
+                // Handle loading state
+                Text(text = "Loading...", color = Color.Blue)
+            }
+
             is CreateUserResult.Success -> {
                 // Handle success
-               // Text(text = result.message, color = Color.Green)
-                navHostController.navigate(AppRoutes.HomeScreen(userViewModel.userName))
+                // Text(text = result.message, color = Color.Green)
+                LaunchedEffect(Unit) {
+                    navHostController.navigate(AppRoutes.HomeScreen(signupViewModel.userName))
 
+                }
             }
 
             is CreateUserResult.Error -> {
                 // Handle error
                 Text(text = result.message, color = Color.Red)
             }
+
+            else -> {}
         }
     }
 
