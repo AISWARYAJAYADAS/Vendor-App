@@ -1,5 +1,6 @@
 package com.example.vendorapp.screens.login
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -47,6 +50,7 @@ import com.example.vendorapp.screens.common.CustomLoading
 import com.example.vendorapp.screens.signup.MedicalStoreButton
 import com.example.vendorapp.viewmodel.LoginResult
 import com.example.vendorapp.viewmodel.LoginViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navHostController: NavHostController) {
@@ -60,6 +64,9 @@ fun LoginScreen(navHostController: NavHostController) {
 
     val loginViewModel: LoginViewModel = hiltViewModel()
     val loginResult by loginViewModel.loginResult.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -134,10 +141,21 @@ fun LoginScreen(navHostController: NavHostController) {
         MedicalStoreButton(
             text = "Login",
             onClick = {
-                loginViewModel.loginUser(
-                    email = loginViewModel.userEmail,
-                    password = loginViewModel.password
-                )
+                if (loginViewModel.userEmail.isNotBlank() && loginViewModel.password.isNotBlank()) {
+                    loginViewModel.loginUser(
+                        email = loginViewModel.userEmail,
+                        password = loginViewModel.password
+                    )
+                } else {
+                    // Show a toast message indicating that all fields are required
+                    coroutineScope.launch {
+                        Toast.makeText(
+                            context,
+                            "Please fill in all the fields",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             },
         )
 

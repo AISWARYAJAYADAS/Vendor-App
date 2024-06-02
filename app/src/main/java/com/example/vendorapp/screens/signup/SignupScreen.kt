@@ -1,5 +1,6 @@
 package com.example.vendorapp.screens.signup
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -49,6 +52,7 @@ import com.example.vendorapp.R
 import com.example.vendorapp.navigation.AppRoutes
 import com.example.vendorapp.viewmodel.CreateUserResult
 import com.example.vendorapp.viewmodel.SignupViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -64,6 +68,9 @@ fun SignupScreen(navHostController: NavHostController) {
 
     val signupViewModel: SignupViewModel = hiltViewModel()
     val createUserResult by signupViewModel.createUserResult.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
 
 
@@ -196,14 +203,31 @@ fun SignupScreen(navHostController: NavHostController) {
         MedicalStoreButton(
             text = "Signup",
             onClick = {
-                signupViewModel.createUser(
-                    password = signupViewModel.password,
-                    userName = signupViewModel.userName,
-                    userAddress = signupViewModel.userAddress,
-                    userEmail = signupViewModel.userEmail,
-                    userPhone = signupViewModel.userPhone,
-                    userPincode = signupViewModel.userPincode
-                )
+                if (signupViewModel.userName.isNotBlank() &&
+                    signupViewModel.userEmail.isNotBlank() &&
+                    signupViewModel.password.isNotBlank() &&
+                    signupViewModel.userPhone.isNotBlank() &&
+                    signupViewModel.userAddress.isNotBlank() &&
+                    signupViewModel.userPincode.isNotBlank()
+                ) {
+                    signupViewModel.createUser(
+                        password = signupViewModel.password,
+                        userName = signupViewModel.userName,
+                        userAddress = signupViewModel.userAddress,
+                        userEmail = signupViewModel.userEmail,
+                        userPhone = signupViewModel.userPhone,
+                        userPincode = signupViewModel.userPincode
+                    )
+                } else {
+                    // Show a toast message indicating that all fields are required
+                    coroutineScope.launch {
+                        Toast.makeText(
+                            context,
+                            "Please fill in all the fields",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             },
         )
 
